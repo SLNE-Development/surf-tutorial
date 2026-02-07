@@ -60,7 +60,7 @@ class CinematicRunner(
 
             // Check if we're done with both movement and all timed keyframes
             val movementComplete = index >= prepared.size
-            val allKeyframesExecuted = timedFrames.all { it.time < tick }
+            val allKeyframesExecuted = timedFrames.all { it.time <= tick }
             
             if (movementComplete && allKeyframesExecuted) {
                 player.sendPacket(PaperPackets.createDestroyHolderPacket(entityId))
