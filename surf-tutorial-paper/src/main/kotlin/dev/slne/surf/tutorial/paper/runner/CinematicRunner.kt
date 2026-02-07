@@ -64,11 +64,8 @@ class CinematicRunner(
 
             // Process movement if we're within the cinematic time range
             if (tick >= startTick && tick <= endTick) {
-                // Calculate position along the smooth spline path
-                var target = calculatePositionAlongPath(tick)
-                
-                // Apply any active rotation changes
-                target = applyRotationChanges(target, tick)
+                // Calculate position along the smooth spline path and apply rotation changes
+                val target = applyRotationChanges(calculatePositionAlongPath(tick), tick)
 
                 // Calculate velocity for smooth visual movement
                 val velocity = Vector3d(
@@ -302,9 +299,7 @@ class CinematicRunner(
         val (startYaw, startPitch) = if (currentTick == change.startTime) {
             // At the start of a new rotation change, use the current location's rotation
             // This ensures smooth transition from path-based rotation or previous rotation change
-            val start = location.yaw to location.pitch
-            currentRotationOverride = start
-            start
+            location.yaw to location.pitch
         } else {
             // Mid-rotation change, use the stored override to ensure smooth interpolation
             currentRotationOverride ?: (location.yaw to location.pitch)
@@ -326,13 +321,8 @@ class CinematicRunner(
         val newYaw = startYaw + yawDelta * t.toFloat()
         val newPitch = startPitch + pitchDelta * t.toFloat()
         
-        // Update the override for the next frame
+        // Store the interpolated rotation for the next frame
         currentRotationOverride = newYaw to newPitch
-        
-        // If rotation change is complete, ensure we're exactly at target
-        if (currentTick >= change.endTime) {
-            currentRotationOverride = change.targetYaw to change.targetPitch
-        }
         
         return Location(location.world, location.x, location.y, location.z, newYaw, newPitch)
     }
