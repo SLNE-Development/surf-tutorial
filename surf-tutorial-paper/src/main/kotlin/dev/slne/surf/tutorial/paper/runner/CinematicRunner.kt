@@ -9,6 +9,7 @@ import dev.slne.surf.tutorial.api.cinematic.KeyFrame
 import dev.slne.surf.tutorial.api.cinematic.keyframe.*
 import dev.slne.surf.tutorial.api.tutorial.Tutorial
 import dev.slne.surf.tutorial.paper.PaperPackets
+import dev.slne.surf.tutorial.paper.service.tutorialService
 import dev.slne.surf.tutorial.paper.util.sendPacket
 import io.papermc.paper.threadedregions.scheduler.AsyncScheduler
 import io.papermc.paper.threadedregions.scheduler.ScheduledTask
@@ -91,6 +92,10 @@ class CinematicRunner(
                 player.sendPacket(PaperPackets.createDestroyHolderPacket(entityId))
                 player.sendPacket(PaperPackets.createCameraPacket(player.entityId))
                 task.cancel()
+                
+                // Finish the tutorial when cinematic completes
+                tutorialService.finishTutorial(player)
+                
                 return@runAtFixedRate
             }
 
