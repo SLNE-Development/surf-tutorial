@@ -49,14 +49,14 @@ object LobbyTutorial : Tutorial("lobby_welcome") {
 
         addKeyFrame(
             CinematicLocationKeyFrame(
-                160,
+                180,
                 Location(Bukkit.getWorlds().first(), 60.0, 150.0, 315.0, 90f, 0f)
             )
         )
 
         addKeyFrame(
             CinematicStopKeyFrame(
-                180,
+                190,
                 Location(Bukkit.getWorlds().first(), 45.0, 149.0, 315.0, 90f, -25f)
             )
         )
@@ -69,8 +69,8 @@ object LobbyTutorial : Tutorial("lobby_welcome") {
                     note("Viel Spaß auf dem Server!")
                 }, Title.Times.times(
                     Duration.ofMillis(500),
-                    Duration.ofSeconds(2),
-                    Duration.ofMillis(500)
+                    Duration.ofSeconds(3),
+                    Duration.ofMillis(1000)
                 )
             )
         )
