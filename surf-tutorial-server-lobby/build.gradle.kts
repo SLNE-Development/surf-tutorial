@@ -1,3 +1,5 @@
+import dev.slne.surf.surfapi.gradle.util.registerRequired
+
 plugins {
     id("dev.slne.surf.surfapi.gradle.paper-plugin")
 }
@@ -12,4 +14,8 @@ surfPaperPluginApi {
     generateLibraryLoader(false)
 
     authors.add("red")
+
+    serverDependencies {
+        registerRequired("surf-tutorial-paper")
+    }
 }

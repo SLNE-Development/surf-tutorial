@@ -2,13 +2,11 @@ package dev.slne.surf.tutorial.api.cinematic.keyframe
 
 import dev.slne.surf.surfapi.core.api.messages.builder.SurfComponentBuilder
 import dev.slne.surf.tutorial.api.cinematic.KeyFrame
+import net.kyori.adventure.title.Title
 
-data class TextKeyFrame(
+data class TitleKeyFrame(
     override val time: Long,
-    val typ: Type,
-    val message: SurfComponentBuilder.() -> Unit
-) : KeyFrame {
-    enum class Type {
-        CHAT, ACTION_BAR
-    }
-}
+    val title: SurfComponentBuilder.() -> Unit,
+    val subTitle: SurfComponentBuilder.() -> Unit,
+    val times: Title.Times
+) : KeyFrame
