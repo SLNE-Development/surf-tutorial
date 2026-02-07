@@ -171,7 +171,10 @@ class CinematicRunner(
      * This ensures the camera passes through all waypoints smoothly without stopping.
      */
     private fun calculatePositionAlongPath(currentTick: Long): Location {
-        if (pathPoints.isEmpty()) return lastLocation
+        if (pathPoints.isEmpty()) {
+            // Return first frame location if lastLocation not initialized yet
+            return if (::lastLocation.isInitialized) lastLocation else pathPoints.firstOrNull()?.location ?: Location(null, 0.0, 0.0, 0.0)
+        }
         if (pathPoints.size == 1) return pathPoints.first().location
         
         // Binary search to find which segment we're in (more efficient than linear search)
@@ -179,7 +182,7 @@ class CinematicRunner(
         var right = pathPoints.size - 2
         
         while (left <= right) {
-            val mid = (left + right) / 2
+            val mid = left + (right - left) / 2  // Safer than (left + right) / 2 to avoid overflow
             if (currentTick < pathPoints[mid].time) {
                 right = mid - 1
             } else if (currentTick > pathPoints[mid + 1].time) {
@@ -257,11 +260,12 @@ class CinematicRunner(
     
     /**
      * Normalize angle difference to the range [-180, 180] to ensure shortest rotation path.
+     * Uses modulo arithmetic for better performance with large angles.
      */
     private fun normalizeAngle(angle: Float): Float {
-        var normalized = angle
-        while (normalized > 180f) normalized -= 360f
-        while (normalized < -180f) normalized += 360f
+        var normalized = angle % 360f
+        if (normalized > 180f) normalized -= 360f
+        if (normalized < -180f) normalized += 360f
         return normalized
     }
 
