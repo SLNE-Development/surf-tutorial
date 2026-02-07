@@ -7,9 +7,9 @@ dependencies {
 }
 
 surfPaperPluginApi {
-    mainClass("dev.slne.surf.tutorial.server.event.PaperMain")
-    authors.add("red")
+    mainClass("dev.slne.surf.tutorial.server.lobby.PaperMain")
     foliaSupported(true)
-
     generateLibraryLoader(false)
+
+    authors.add("red")
 }

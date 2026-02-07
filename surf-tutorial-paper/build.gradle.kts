@@ -8,8 +8,8 @@ dependencies {
 
 surfPaperPluginApi {
     mainClass("dev.slne.surf.tutorial.paper.PaperMain")
-    authors.add("red")
     foliaSupported(true)
-
     generateLibraryLoader(false)
+
+    authors.add("red")
 }
