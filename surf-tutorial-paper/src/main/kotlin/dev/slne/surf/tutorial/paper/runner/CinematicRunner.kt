@@ -79,25 +79,30 @@ class CinematicRunner(
                 }
 
                 if (tick <= frame.end) {
+                    // Calculate progress through current segment with easing
                     val progress =
                         (tick - frame.start).toDouble() / (frame.end - frame.start).toDouble()
                     val t = smooth(progress)
+                    
+                    // Calculate target position along the path
                     val target = lerp(frame.from, frame.to, t)
 
+                    // Calculate velocity for smooth visual movement
                     val velocity = Vector3d(
                         (target.x - lastLocation.x) / 0.05,
                         (target.y - lastLocation.y) / 0.05,
                         (target.z - lastLocation.z) / 0.05
                     )
 
+                    // Send velocity packet for smooth movement
                     player.sendPacket(PaperPackets.createVelocityHolderPacket(entityId, velocity))
-
-                    if (tick % 10L == 0L) {
-                        player.sendPacket(PaperPackets.createTeleportHolderPacket(entityId, target))
-                    }
+                    
+                    // Send teleport packet every tick for accuracy (prevents drift)
+                    player.sendPacket(PaperPackets.createTeleportHolderPacket(entityId, target))
 
                     lastLocation = target
                 } else {
+                    // Segment complete, teleport to exact end position
                     player.sendPacket(PaperPackets.createTeleportHolderPacket(entityId, frame.to))
                     lastLocation = frame.to
                     index++
