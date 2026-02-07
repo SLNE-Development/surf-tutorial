@@ -16,7 +16,6 @@ import net.kyori.adventure.sound.Sound
 import org.bukkit.Bukkit
 import org.bukkit.Location
 import org.bukkit.entity.Player
-import java.util.*
 import java.util.concurrent.TimeUnit
 
 class CinematicRunner(
@@ -31,7 +30,7 @@ class CinematicRunner(
     private val pathPoints = mutableListOf<PathPoint>()
     private val timedFrames = mutableListOf<KeyFrame>()
 
-    private val entityId = Random().nextInt(Int.MAX_VALUE)
+    private val entityId = kotlin.random.Random.nextInt(0, Int.MAX_VALUE)
 
     private var tick = 0L
     private var startTick = 0L
@@ -198,8 +197,13 @@ class CinematicRunner(
         val p2 = pathPoints[segmentIndex + 1]
         
         // Calculate local t (0 to 1) within this segment
-        val segmentProgress = (currentTick - p1.time).toDouble() / (p2.time - p1.time).toDouble()
-        val t = segmentProgress.coerceIn(0.0, 1.0)
+        val timeDiff = (p2.time - p1.time).toDouble()
+        val t = if (timeDiff > 0) {
+            ((currentTick - p1.time).toDouble() / timeDiff).coerceIn(0.0, 1.0)
+        } else {
+            // Handle edge case where two waypoints have the same time
+            0.0
+        }
         
         // Get control points for Catmull-Rom spline
         val p0 = if (segmentIndex > 0) pathPoints[segmentIndex - 1].location else p1.location
