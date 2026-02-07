@@ -175,11 +175,19 @@ class CinematicRunner(
         if (pathPoints.isEmpty()) return lastLocation
         if (pathPoints.size == 1) return pathPoints.first().location
         
-        // Find which segment we're in
+        // Binary search to find which segment we're in (more efficient than linear search)
         var segmentIndex = 0
-        for (i in 0 until pathPoints.size - 1) {
-            if (currentTick >= pathPoints[i].time && currentTick <= pathPoints[i + 1].time) {
-                segmentIndex = i
+        var left = 0
+        var right = pathPoints.size - 2
+        
+        while (left <= right) {
+            val mid = (left + right) / 2
+            if (currentTick < pathPoints[mid].time) {
+                right = mid - 1
+            } else if (currentTick > pathPoints[mid + 1].time) {
+                left = mid + 1
+            } else {
+                segmentIndex = mid
                 break
             }
         }
@@ -234,11 +242,25 @@ class CinematicRunner(
             (-p0.z + 3.0 * p1.z - 3.0 * p2.z + p3.z) * t3
         )
         
-        // Interpolate rotation separately with simple lerp for smooth camera rotation
-        val yaw = p1.yaw + (p2.yaw - p1.yaw) * t.toFloat()
-        val pitch = p1.pitch + (p2.pitch - p1.pitch) * t.toFloat()
+        // Interpolate rotation separately with wrapping for smooth camera rotation
+        // Normalize angle difference to handle -180/+180 boundary crossing
+        val yawDiff = normalizeAngle(p2.yaw - p1.yaw)
+        val pitchDiff = normalizeAngle(p2.pitch - p1.pitch)
+        
+        val yaw = p1.yaw + yawDiff * t.toFloat()
+        val pitch = p1.pitch + pitchDiff * t.toFloat()
         
         return Location(p1.world, x, y, z, yaw, pitch)
+    }
+    
+    /**
+     * Normalize angle difference to the range [-180, 180] to ensure shortest rotation path.
+     */
+    private fun normalizeAngle(angle: Float): Float {
+        var normalized = angle
+        while (normalized > 180f) normalized -= 360f
+        while (normalized < -180f) normalized += 360f
+        return normalized
     }
 
     private data class PathPoint(
