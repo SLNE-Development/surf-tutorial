@@ -53,46 +53,55 @@ class CinematicRunner(
 
     private fun run() {
         task = asyncScheduler.runAtFixedRate(plugin, { _ ->
+            // Execute all keyframes scheduled for this tick
             timedFrames
                 .filter { it.time == tick }
                 .forEach { execute(it) }
 
-            if (index >= prepared.size) {
+            // Check if we're done with both movement and all timed keyframes
+            val movementComplete = index >= prepared.size
+            val allKeyframesExecuted = timedFrames.all { it.time < tick }
+            
+            if (movementComplete && allKeyframesExecuted) {
                 player.sendPacket(PaperPackets.createDestroyHolderPacket(entityId))
+                player.sendPacket(PaperPackets.createCameraPacket(player.entityId))
                 task.cancel()
                 return@runAtFixedRate
             }
 
-            val frame = prepared[index]
+            // Process movement if there are still segments to process
+            if (index < prepared.size) {
+                val frame = prepared[index]
 
-            if (tick < frame.start) {
-                tick++
-                return@runAtFixedRate
-            }
-
-            if (tick <= frame.end) {
-                val progress =
-                    (tick - frame.start).toDouble() / (frame.end - frame.start).toDouble()
-                val t = smooth(progress)
-                val target = lerp(frame.from, frame.to, t)
-
-                val velocity = Vector3d(
-                    (target.x - lastLocation.x) / 0.05,
-                    (target.y - lastLocation.y) / 0.05,
-                    (target.z - lastLocation.z) / 0.05
-                )
-
-                player.sendPacket(PaperPackets.createVelocityHolderPacket(entityId, velocity))
-
-                if (tick % 10L == 0L) {
-                    player.sendPacket(PaperPackets.createTeleportHolderPacket(entityId, target))
+                if (tick < frame.start) {
+                    tick++
+                    return@runAtFixedRate
                 }
 
-                lastLocation = target
-            } else {
-                player.sendPacket(PaperPackets.createTeleportHolderPacket(entityId, frame.to))
-                lastLocation = frame.to
-                index++
+                if (tick <= frame.end) {
+                    val progress =
+                        (tick - frame.start).toDouble() / (frame.end - frame.start).toDouble()
+                    val t = smooth(progress)
+                    val target = lerp(frame.from, frame.to, t)
+
+                    val velocity = Vector3d(
+                        (target.x - lastLocation.x) / 0.05,
+                        (target.y - lastLocation.y) / 0.05,
+                        (target.z - lastLocation.z) / 0.05
+                    )
+
+                    player.sendPacket(PaperPackets.createVelocityHolderPacket(entityId, velocity))
+
+                    if (tick % 10L == 0L) {
+                        player.sendPacket(PaperPackets.createTeleportHolderPacket(entityId, target))
+                    }
+
+                    lastLocation = target
+                } else {
+                    player.sendPacket(PaperPackets.createTeleportHolderPacket(entityId, frame.to))
+                    lastLocation = frame.to
+                    index++
+                }
             }
 
             tick++
