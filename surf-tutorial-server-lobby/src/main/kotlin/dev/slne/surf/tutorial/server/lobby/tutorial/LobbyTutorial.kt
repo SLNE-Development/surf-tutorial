@@ -41,9 +41,23 @@ object LobbyTutorial : Tutorial("lobby_welcome") {
         )
 
         addKeyFrame(
-            CinematicStopKeyFrame(
+            CinematicLocationKeyFrame(
                 160,
-                Location(Bukkit.getWorlds().first(), 101.0, 148.0, 315.0, 90f, -1f)
+                Location(Bukkit.getWorlds().first(), 101.0, 155.0, 315.0, 90f, 20f)
+            )
+        )
+
+        addKeyFrame(
+            CinematicLocationKeyFrame(
+                160,
+                Location(Bukkit.getWorlds().first(), 60.0, 150.0, 315.0, 90f, 0f)
+            )
+        )
+
+        addKeyFrame(
+            CinematicStopKeyFrame(
+                180,
+                Location(Bukkit.getWorlds().first(), 45.0, 149.0, 315.0, 90f, -25f)
             )
         )
 
