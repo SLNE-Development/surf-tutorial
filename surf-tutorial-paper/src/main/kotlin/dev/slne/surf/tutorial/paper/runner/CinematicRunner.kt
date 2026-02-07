@@ -58,17 +58,6 @@ class CinematicRunner(
                 .filter { it.time == tick }
                 .forEach { execute(it) }
 
-            // Check if we're done with both movement and all timed keyframes
-            val movementComplete = tick > endTick
-            val allKeyframesExecuted = timedFrames.all { it.time <= tick }
-            
-            if (movementComplete && allKeyframesExecuted) {
-                player.sendPacket(PaperPackets.createDestroyHolderPacket(entityId))
-                player.sendPacket(PaperPackets.createCameraPacket(player.entityId))
-                task.cancel()
-                return@runAtFixedRate
-            }
-
             // Process movement if we're within the cinematic time range
             if (tick >= startTick && tick <= endTick) {
                 // Calculate position along the smooth spline path
@@ -88,6 +77,17 @@ class CinematicRunner(
                 player.sendPacket(PaperPackets.createTeleportHolderPacket(entityId, target))
 
                 lastLocation = target
+            }
+
+            // Check if we're done with both movement and all timed keyframes
+            val movementComplete = tick > endTick
+            val allKeyframesExecuted = timedFrames.all { it.time <= tick }
+            
+            if (movementComplete && allKeyframesExecuted) {
+                player.sendPacket(PaperPackets.createDestroyHolderPacket(entityId))
+                player.sendPacket(PaperPackets.createCameraPacket(player.entityId))
+                task.cancel()
+                return@runAtFixedRate
             }
 
             tick++
