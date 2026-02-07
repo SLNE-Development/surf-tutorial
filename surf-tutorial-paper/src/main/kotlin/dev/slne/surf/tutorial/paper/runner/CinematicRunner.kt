@@ -1,5 +1,6 @@
 package dev.slne.surf.tutorial.paper.runner
 
+import com.github.retrooper.packetevents.util.Vector3d
 import dev.slne.surf.surfapi.core.api.messages.adventure.buildText
 import dev.slne.surf.surfapi.core.api.messages.adventure.sendText
 import dev.slne.surf.surfapi.core.api.messages.adventure.showTitle
@@ -7,12 +8,15 @@ import dev.slne.surf.surfapi.core.api.messages.builder.SurfComponentBuilder
 import dev.slne.surf.tutorial.api.cinematic.KeyFrame
 import dev.slne.surf.tutorial.api.cinematic.keyframe.*
 import dev.slne.surf.tutorial.api.tutorial.Tutorial
+import dev.slne.surf.tutorial.paper.PaperPackets
+import dev.slne.surf.tutorial.paper.util.sendPacket
 import io.papermc.paper.threadedregions.scheduler.AsyncScheduler
 import io.papermc.paper.threadedregions.scheduler.ScheduledTask
+import net.kyori.adventure.sound.Sound
 import org.bukkit.Bukkit
 import org.bukkit.Location
-import org.bukkit.entity.ArmorStand
 import org.bukkit.entity.Player
+import java.util.*
 import java.util.concurrent.TimeUnit
 
 class CinematicRunner(
@@ -27,10 +31,12 @@ class CinematicRunner(
     private val prepared = mutableListOf<PreparedFrame>()
     private val timedFrames = mutableListOf<KeyFrame>()
 
+    private val entityId = Random().nextInt(Int.MAX_VALUE)
+
     private var tick = 0L
     private var index = 0
+    private lateinit var lastLocation: Location
 
-    private lateinit var stand: ArmorStand
     private lateinit var task: ScheduledTask
 
     fun start() {
@@ -41,8 +47,8 @@ class CinematicRunner(
 
     fun stop() {
         if (::task.isInitialized) task.cancel()
-        if (::stand.isInitialized) stand.remove()
-        player.spectatorTarget = null
+        player.sendPacket(PaperPackets.createDestroyHolderPacket(entityId))
+        player.sendPacket(PaperPackets.createCameraPacket(player.entityId))
     }
 
     private fun run() {
@@ -52,8 +58,7 @@ class CinematicRunner(
                 .forEach { execute(it) }
 
             if (index >= prepared.size) {
-                player.spectatorTarget = null
-                stand.remove()
+                player.sendPacket(PaperPackets.createDestroyHolderPacket(entityId))
                 task.cancel()
                 return@runAtFixedRate
             }
@@ -71,10 +76,22 @@ class CinematicRunner(
                 val t = smooth(progress)
                 val target = lerp(frame.from, frame.to, t)
 
-                val velocity = target.toVector().subtract(stand.location.toVector())
-                stand.velocity = velocity
+                val velocity = Vector3d(
+                    (target.x - lastLocation.x) / 0.05,
+                    (target.y - lastLocation.y) / 0.05,
+                    (target.z - lastLocation.z) / 0.05
+                )
+
+                player.sendPacket(PaperPackets.createVelocityHolderPacket(entityId, velocity))
+
+                if (tick % 10L == 0L) {
+                    player.sendPacket(PaperPackets.createTeleportHolderPacket(entityId, target))
+                }
+
+                lastLocation = target
             } else {
-                stand.teleportAsync(frame.to)
+                player.sendPacket(PaperPackets.createTeleportHolderPacket(entityId, frame.to))
+                lastLocation = frame.to
                 index++
             }
 
@@ -83,30 +100,39 @@ class CinematicRunner(
     }
 
     private fun prepare() {
-        var start: CinematicStartKeyFrame? = null
+        val points = mutableListOf<Pair<Long, Location>>()
 
         frames.forEach {
             when (it) {
-                is CinematicStartKeyFrame -> start = it
-                is CinematicStopKeyFrame -> {
-                    val s = start ?: return@forEach
-                    prepared += PreparedFrame(
-                        s.time,
-                        it.time,
-                        s.location.clone(),
-                        it.location.clone()
-                    )
-                    start = null
-                }
+                is CinematicStartKeyFrame ->
+                    points += it.time to it.location.clone()
+
+                is CinematicLocationKeyFrame ->
+                    points += it.time to it.location.clone()
+
+                is CinematicStopKeyFrame ->
+                    points += it.time to it.location.clone()
 
                 else -> timedFrames += it
             }
         }
+
+        points
+            .sortedBy { it.first }
+            .zipWithNext { a, b ->
+                PreparedFrame(
+                    a.first,
+                    b.first,
+                    a.second,
+                    b.second
+                )
+            }
+            .forEach { prepared += it }
     }
 
     private fun execute(frame: KeyFrame) {
         when (frame) {
-            is SoundKeyFrame -> player.playSound(frame.sound)
+            is SoundKeyFrame -> player.playSound(frame.sound, Sound.Emitter.self())
             is PlayerActionKeyFrame -> frame.action.invoke(player)
             is PositionKeyFrame -> player.teleportAsync(frame.position)
             is TextKeyFrame -> when (frame.typ) {
@@ -139,13 +165,10 @@ class CinematicRunner(
 
     private fun spawn() {
         val loc = prepared.first().from
-        stand = loc.world.spawn(loc, ArmorStand::class.java).apply {
-            isInvisible = true
-            isMarker = true
-            setGravity(false)
-            setAI(false)
-        }
-        player.spectatorTarget = stand
+        lastLocation = loc.clone()
+
+        player.sendPacket(PaperPackets.createSpawnHolderPacket(entityId, loc))
+        player.sendPacket(PaperPackets.createCameraPacket(entityId))
     }
 
     private fun smooth(x: Double): Double =

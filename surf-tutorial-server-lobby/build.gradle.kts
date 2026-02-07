@@ -5,7 +5,7 @@ plugins {
 }
 
 dependencies {
-    api(project(":surf-tutorial-api"))
+    compileOnly(project(":surf-tutorial-api"))
 }
 
 surfPaperPluginApi {
