@@ -178,7 +178,6 @@ class CinematicRunner(
         // Binary search to find which segment we're in (more efficient than linear search)
         var left = 0
         var right = pathPoints.size - 2
-        var found = false
         
         while (left <= right) {
             val mid = (left + right) / 2
@@ -188,18 +187,12 @@ class CinematicRunner(
                 left = mid + 1
             } else {
                 left = mid
-                found = true
                 break
             }
         }
         
         // Use the result of binary search, ensuring it's within valid bounds
         val segmentIndex = left.coerceIn(0, pathPoints.size - 2)
-        
-        // If we're past the last point, return it
-        if (segmentIndex >= pathPoints.size - 1) {
-            return pathPoints.last().location
-        }
         
         val p1 = pathPoints[segmentIndex]
         val p2 = pathPoints[segmentIndex + 1]
