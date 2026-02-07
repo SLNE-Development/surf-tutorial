@@ -176,9 +176,9 @@ class CinematicRunner(
         if (pathPoints.size == 1) return pathPoints.first().location
         
         // Binary search to find which segment we're in (more efficient than linear search)
-        var segmentIndex = 0
         var left = 0
         var right = pathPoints.size - 2
+        var found = false
         
         while (left <= right) {
             val mid = (left + right) / 2
@@ -187,15 +187,14 @@ class CinematicRunner(
             } else if (currentTick > pathPoints[mid + 1].time) {
                 left = mid + 1
             } else {
-                segmentIndex = mid
+                left = mid
+                found = true
                 break
             }
         }
         
-        // If loop didn't find exact segment, use the closest valid one
-        if (segmentIndex == 0 && (left > 0 || right < pathPoints.size - 2)) {
-            segmentIndex = left.coerceIn(0, pathPoints.size - 2)
-        }
+        // Use the result of binary search, ensuring it's within valid bounds
+        val segmentIndex = left.coerceIn(0, pathPoints.size - 2)
         
         // If we're past the last point, return it
         if (segmentIndex >= pathPoints.size - 1) {
@@ -250,11 +249,11 @@ class CinematicRunner(
         // Interpolate rotation with proper angle wrapping for smooth camera rotation
         // Using linear interpolation is more appropriate for angles than spline
         // to avoid overshooting and maintain predictable camera orientation
-        val yawDiff = normalizeAngle(p2.yaw - p1.yaw)
-        val pitchDiff = normalizeAngle(p2.pitch - p1.pitch)
+        val normalizedYawDelta = normalizeAngle(p2.yaw - p1.yaw)
+        val normalizedPitchDelta = normalizeAngle(p2.pitch - p1.pitch)
         
-        val yaw = p1.yaw + yawDiff * t.toFloat()
-        val pitch = p1.pitch + pitchDiff * t.toFloat()
+        val yaw = p1.yaw + normalizedYawDelta * t.toFloat()
+        val pitch = p1.pitch + normalizedPitchDelta * t.toFloat()
         
         return Location(p1.world, x, y, z, yaw, pitch)
     }
