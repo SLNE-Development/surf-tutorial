@@ -192,6 +192,11 @@ class CinematicRunner(
             }
         }
         
+        // If loop didn't find exact segment, use the closest valid one
+        if (segmentIndex == 0 && (left > 0 || right < pathPoints.size - 2)) {
+            segmentIndex = left.coerceIn(0, pathPoints.size - 2)
+        }
+        
         // If we're past the last point, return it
         if (segmentIndex >= pathPoints.size - 1) {
             return pathPoints.last().location
@@ -242,8 +247,9 @@ class CinematicRunner(
             (-p0.z + 3.0 * p1.z - 3.0 * p2.z + p3.z) * t3
         )
         
-        // Interpolate rotation separately with wrapping for smooth camera rotation
-        // Normalize angle difference to handle -180/+180 boundary crossing
+        // Interpolate rotation with proper angle wrapping for smooth camera rotation
+        // Using linear interpolation is more appropriate for angles than spline
+        // to avoid overshooting and maintain predictable camera orientation
         val yawDiff = normalizeAngle(p2.yaw - p1.yaw)
         val pitchDiff = normalizeAngle(p2.pitch - p1.pitch)
         
