@@ -290,18 +290,33 @@ class CinematicRunner(
         }
         
         if (activeChanges.isEmpty()) {
+            // No active rotation changes, clear override
+            currentRotationOverride = null
             return location
         }
         
         // Apply the most recent rotation change (if multiple overlap)
         val change = activeChanges.last()
         
-        // Get the starting rotation (either from current override or from location)
-        val startYaw = currentRotationOverride?.first ?: location.yaw
-        val startPitch = currentRotationOverride?.second ?: location.pitch
+        // Determine the starting rotation
+        val (startYaw, startPitch) = if (currentTick == change.startTime) {
+            // At the start of a new rotation change, use the current location's rotation
+            // This ensures smooth transition from path-based rotation or previous rotation change
+            val start = location.yaw to location.pitch
+            currentRotationOverride = start
+            start
+        } else {
+            // Mid-rotation change, use the stored override to ensure smooth interpolation
+            currentRotationOverride ?: (location.yaw to location.pitch)
+        }
         
         // Calculate progress through the rotation change
-        val progress = (currentTick - change.startTime).toDouble() / (change.endTime - change.startTime).toDouble()
+        val duration = (change.endTime - change.startTime).toDouble()
+        val progress = if (duration > 0) {
+            (currentTick - change.startTime).toDouble() / duration
+        } else {
+            1.0 // Handle zero-duration edge case
+        }
         val t = progress.coerceIn(0.0, 1.0)
         
         // Interpolate rotation with angle wrapping
@@ -311,17 +326,12 @@ class CinematicRunner(
         val newYaw = startYaw + yawDelta * t.toFloat()
         val newPitch = startPitch + pitchDelta * t.toFloat()
         
-        // Store the current rotation for the next frame
-        if (currentTick == change.startTime) {
-            currentRotationOverride = startYaw to startPitch
-        }
+        // Update the override for the next frame
+        currentRotationOverride = newYaw to newPitch
         
-        // Update override if still in progress
-        if (currentTick < change.endTime) {
-            currentRotationOverride = newYaw to newPitch
-        } else {
-            // Rotation change complete, clear override
-            currentRotationOverride = null
+        // If rotation change is complete, ensure we're exactly at target
+        if (currentTick >= change.endTime) {
+            currentRotationOverride = change.targetYaw to change.targetPitch
         }
         
         return Location(location.world, location.x, location.y, location.z, newYaw, newPitch)
