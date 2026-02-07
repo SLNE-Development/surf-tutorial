@@ -21,7 +21,7 @@ object LobbyTutorial : Tutorial("lobby_welcome") {
 
         addKeyFrame(
             CinematicStartKeyFrame(
-                20,
+                0,
                 Location(Bukkit.getWorlds().first(), 104.0, 154.0, 298.0, -21.4f, 26.1f)
             )
         )
