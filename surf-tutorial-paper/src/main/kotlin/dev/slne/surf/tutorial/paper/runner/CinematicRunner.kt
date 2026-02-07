@@ -287,9 +287,11 @@ class CinematicRunner(
         }
         
         if (activeChanges.isEmpty()) {
-            // No active rotation changes, clear override
-            currentRotationOverride = null
-            return location
+            // No active rotation changes - use override if available (to maintain last rotation)
+            // or fall back to path-based rotation
+            return currentRotationOverride?.let { (yaw, pitch) ->
+                Location(location.world, location.x, location.y, location.z, yaw, pitch)
+            } ?: location
         }
         
         // Apply the most recent rotation change (if multiple overlap)
@@ -297,9 +299,9 @@ class CinematicRunner(
         
         // Determine the starting rotation
         val (startYaw, startPitch) = if (currentTick == change.startTime) {
-            // At the start of a new rotation change, use the current location's rotation
-            // This ensures smooth transition from path-based rotation or previous rotation change
-            location.yaw to location.pitch
+            // At the start of a new rotation change, use previous override if available
+            // (for smooth transition from previous rotation change) or current location rotation
+            currentRotationOverride ?: (location.yaw to location.pitch)
         } else {
             // Mid-rotation change, use the stored override to ensure smooth interpolation
             currentRotationOverride ?: (location.yaw to location.pitch)
