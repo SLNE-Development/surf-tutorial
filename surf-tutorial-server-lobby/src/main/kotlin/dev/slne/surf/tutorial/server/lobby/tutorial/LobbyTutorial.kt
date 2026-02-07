@@ -42,14 +42,14 @@ object LobbyTutorial : Tutorial("lobby_welcome") {
 
         addKeyFrame(
             CinematicStopKeyFrame(
-                140,
-                Location(Bukkit.getWorlds().first(), 112.0, 154.0, 337.0, 180f, 18f)
+                160,
+                Location(Bukkit.getWorlds().first(), 101.0, 148.0, 315.0, 90f, -1f)
             )
         )
 
         addKeyFrame(
             TitleKeyFrame(
-                155, {
+                170, {
                     primary("CASTCRAFTER.DE")
                 }, {
                     note("Viel Spaß auf dem Server!")
