@@ -29,6 +29,7 @@ class CinematicRunner(
     private val frames = tutorial.getKeyFrames().sortedBy { it.time }
     private val pathPoints = mutableListOf<PathPoint>()
     private val timedFrames = mutableListOf<KeyFrame>()
+    private val rotationChanges = mutableListOf<RotationChange>()
 
     private val entityId = kotlin.random.Random.nextInt(0, Int.MAX_VALUE)
 
@@ -36,6 +37,9 @@ class CinematicRunner(
     private var startTick = 0L
     private var endTick = 0L
     private lateinit var lastLocation: Location
+    
+    // Track current rotation override from CinematicRotationChangeKeyFrame
+    private var currentRotationOverride: Pair<Float, Float>? = null // (yaw, pitch)
 
     private lateinit var task: ScheduledTask
 
@@ -61,7 +65,10 @@ class CinematicRunner(
             // Process movement if we're within the cinematic time range
             if (tick >= startTick && tick <= endTick) {
                 // Calculate position along the smooth spline path
-                val target = calculatePositionAlongPath(tick)
+                var target = calculatePositionAlongPath(tick)
+                
+                // Apply any active rotation changes
+                target = applyRotationChanges(target, tick)
 
                 // Calculate velocity for smooth visual movement
                 val velocity = Vector3d(
@@ -107,6 +114,9 @@ class CinematicRunner(
 
                 is CinematicStopKeyFrame ->
                     points += it.time to it.location.clone()
+                
+                is CinematicRotationChangeKeyFrame ->
+                    rotationChanges += RotationChange(it.time, it.time + it.timeFrame, it.yaw, it.pitch)
 
                 else -> timedFrames += it
             }
@@ -268,9 +278,64 @@ class CinematicRunner(
         if (normalized < -180f) normalized += 360f
         return normalized
     }
+    
+    /**
+     * Apply rotation changes from CinematicRotationChangeKeyFrame.
+     * Smoothly interpolates rotation over the specified timeframe.
+     */
+    private fun applyRotationChanges(location: Location, currentTick: Long): Location {
+        // Find active rotation changes at this tick
+        val activeChanges = rotationChanges.filter { change ->
+            currentTick >= change.startTime && currentTick <= change.endTime
+        }
+        
+        if (activeChanges.isEmpty()) {
+            return location
+        }
+        
+        // Apply the most recent rotation change (if multiple overlap)
+        val change = activeChanges.last()
+        
+        // Get the starting rotation (either from current override or from location)
+        val startYaw = currentRotationOverride?.first ?: location.yaw
+        val startPitch = currentRotationOverride?.second ?: location.pitch
+        
+        // Calculate progress through the rotation change
+        val progress = (currentTick - change.startTime).toDouble() / (change.endTime - change.startTime).toDouble()
+        val t = progress.coerceIn(0.0, 1.0)
+        
+        // Interpolate rotation with angle wrapping
+        val yawDelta = normalizeAngle(change.targetYaw - startYaw)
+        val pitchDelta = normalizeAngle(change.targetPitch - startPitch)
+        
+        val newYaw = startYaw + yawDelta * t.toFloat()
+        val newPitch = startPitch + pitchDelta * t.toFloat()
+        
+        // Store the current rotation for the next frame
+        if (currentTick == change.startTime) {
+            currentRotationOverride = startYaw to startPitch
+        }
+        
+        // Update override if still in progress
+        if (currentTick < change.endTime) {
+            currentRotationOverride = newYaw to newPitch
+        } else {
+            // Rotation change complete, clear override
+            currentRotationOverride = null
+        }
+        
+        return Location(location.world, location.x, location.y, location.z, newYaw, newPitch)
+    }
 
     private data class PathPoint(
         val time: Long,
         val location: Location
+    )
+    
+    private data class RotationChange(
+        val startTime: Long,
+        val endTime: Long,
+        val targetYaw: Float,
+        val targetPitch: Float
     )
 }
