@@ -18,7 +18,7 @@ fun survivalTutorialCommand() = commandTree("survivalTutorial") {
         argument(AsyncPlayerProfileArgument("profile")) {
             integerArgument("step") {
                 anyExecutorSuspend { sender, args ->
-                    val profile = args.awaitAsyncPlayerProfile("player")
+                    val profile = args.awaitAsyncPlayerProfile("profile")
                     val step: Int by args
                     val player = Bukkit.getPlayer(profile.idOrThrow())
 
@@ -48,7 +48,7 @@ fun survivalTutorialCommand() = commandTree("survivalTutorial") {
     literalArgument("getState") {
         argument(AsyncPlayerProfileArgument("profile")) {
             anyExecutorSuspend { sender, args ->
-                val profile = args.awaitAsyncPlayerProfile("player")
+                val profile = args.awaitAsyncPlayerProfile("profile")
                 val player = Bukkit.getPlayer(profile.idOrThrow())
 
                 if (player == null) {
@@ -76,7 +76,7 @@ fun survivalTutorialCommand() = commandTree("survivalTutorial") {
     literalArgument("reset") {
         argument(AsyncPlayerProfileArgument("profile")) {
             anyExecutorSuspend { sender, args ->
-                val profile = args.awaitAsyncPlayerProfile("player")
+                val profile = args.awaitAsyncPlayerProfile("profile")
                 val player = Bukkit.getPlayer(profile.idOrThrow())
 
                 if (player == null) {
