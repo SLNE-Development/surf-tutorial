@@ -13,6 +13,8 @@ object ProtectionListener : Listener {
     fun onProtect(event: ProtectionCreateEvent) {
         val player = event.player
 
+        println("ProtectionCreateEvent: player=${player.name}, tutorialStep=${player.getTutorialStep()}")
+
         if (player.getTutorialStep() != 2) {
             return
         }

@@ -25,7 +25,7 @@ fun SurfComponentBuilder.appendTutorialPrefix() = append {
 
 fun Player.sendTutorialMessage(message: SurfComponentBuilder.() -> Unit) = this.sendText {
     appendTutorialPrefix()
-    spacer("-".repeat(30))
+    spacer("-".repeat(40))
 
     appendNewline()
     appendTutorialPrefix()
@@ -38,5 +38,5 @@ fun Player.sendTutorialMessage(message: SurfComponentBuilder.() -> Unit) = this.
 
     appendNewline()
     appendTutorialPrefix()
-    spacer("-".repeat(30))
+    spacer("-".repeat(40))
 }

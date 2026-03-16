@@ -11,6 +11,7 @@ surfPaperPluginApi {
 
     serverDependencies {
         register("surf-npc-paper")
+        register("surf-protect")
     }
 }
 

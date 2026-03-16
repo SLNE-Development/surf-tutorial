@@ -19,14 +19,19 @@ object NpcInteractListener : Listener {
             return
         }
 
-        if (npc.uniqueName.startsWith("spawn_trader_")) {
+        if (npc.uniqueName.startsWith("surf_shop_npc-")) {
             player.closeInventory()
             player.sendTutorialMessage {
                 appendTutorialPrefix()
-                info("Hey, ich bin der Shop Händler. Hier kannst du Items von ")
+                info("Hey, ich bin der Shop Händler.")
 
+                appendNewline()
                 appendTutorialPrefix()
-                info("anderen Spielern kaufen oder deinen eigenen Shop erstellen.")
+                info("Hier kannst du Items von anderen Spielern ")
+
+                appendNewline()
+                appendTutorialPrefix()
+                info("kaufen oder deinen eigenen Shop erstellen.")
 
                 appendNewline()
                 appendTutorialPrefix()
