@@ -1,10 +1,12 @@
 package dev.slne.surf.tutorial.server.survival.listener
 
 import dev.slne.surf.npc.api.event.NpcInteractEvent
+import dev.slne.surf.surfapi.core.api.messages.adventure.playSound
 import dev.slne.surf.tutorial.server.survival.util.appendTutorialPrefix
 import dev.slne.surf.tutorial.server.survival.util.getTutorialStep
 import dev.slne.surf.tutorial.server.survival.util.sendTutorialMessage
 import dev.slne.surf.tutorial.server.survival.util.setTutorialStep
+import org.bukkit.Sound
 import org.bukkit.event.EventHandler
 import org.bukkit.event.EventPriority
 import org.bukkit.event.Listener
@@ -47,6 +49,18 @@ object NpcInteractListener : Listener {
                 appendNewline()
                 appendTutorialPrefix()
                 variableValue("baue dein erstes Haus.")
+
+                appendNewline()
+                appendTutorialPrefix()
+                info("Tipp: Umso weiter dein Grundstück vom Spawn entfernt ist,")
+
+                appendNewline()
+                appendTutorialPrefix()
+                info("desto günstiger wird es.")
+            }
+
+            player.playSound(true) {
+                type(Sound.ENTITY_VILLAGER_YES)
             }
 
             player.setTutorialStep(2)

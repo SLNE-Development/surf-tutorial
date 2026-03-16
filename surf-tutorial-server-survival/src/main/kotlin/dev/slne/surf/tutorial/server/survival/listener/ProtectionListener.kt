@@ -1,10 +1,12 @@
 package dev.slne.surf.tutorial.server.survival.listener
 
 import dev.slne.surf.protect.paper.event.ProtectionCreateEvent
+import dev.slne.surf.surfapi.core.api.messages.adventure.playSound
 import dev.slne.surf.tutorial.server.survival.util.appendTutorialPrefix
 import dev.slne.surf.tutorial.server.survival.util.getTutorialStep
 import dev.slne.surf.tutorial.server.survival.util.sendTutorialMessage
 import dev.slne.surf.tutorial.server.survival.util.setTutorialStep
+import org.bukkit.Sound
 import org.bukkit.event.EventHandler
 import org.bukkit.event.Listener
 
@@ -34,6 +36,9 @@ object ProtectionListener : Listener {
             appendNewline()
             appendTutorialPrefix()
             primary("Viel Spaß auf dem Server!")
+        }
+        player.playSound(true) {
+            type(Sound.ENTITY_VILLAGER_YES)
         }
         player.setTutorialStep(3)
     }

@@ -1,10 +1,12 @@
 package dev.slne.surf.tutorial.server.survival.listener
 
+import dev.slne.surf.surfapi.core.api.messages.adventure.playSound
 import dev.slne.surf.tutorial.server.survival.util.appendTutorialPrefix
 import dev.slne.surf.tutorial.server.survival.util.getTutorialStep
 import dev.slne.surf.tutorial.server.survival.util.sendTutorialMessage
 import dev.slne.surf.tutorial.server.survival.util.setTutorialStep
 import io.papermc.paper.event.player.PlayerClientLoadedWorldEvent
+import org.bukkit.Sound
 import org.bukkit.event.EventHandler
 import org.bukkit.event.Listener
 
@@ -26,6 +28,10 @@ object PlayerJoinListener : Listener {
                 appendNewline()
                 appendTutorialPrefix()
                 variableValue("Spreche mit dem Shop Händler.")
+            }
+
+            player.playSound(true) {
+                type(Sound.ENTITY_VILLAGER_YES)
             }
             player.setTutorialStep(1)
         }
